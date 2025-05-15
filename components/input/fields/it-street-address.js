@@ -1,20 +1,22 @@
 /** 
 * @author Roberto Stefani 
 **/
-import { forwardRef } from "react";
+import { forwardRef, useCallback } from "react";
 import countries from "@ares/react-native-ui/locales/countries";
 import { useEffect } from "react";
 import { useRef } from "react";
 import { useState } from "react"; // Aggiunto import mancante
+import {aReSContext} from '@ares/react-native-ui/contexts/ARESContext';
 
  
 
  export const ItalianAddress = forwardRef(({trackInternalDetails=false, trackRegion=false, trackProvince=true, provincesAsSymbol=true, style}, ref) => {
-    const countryDefinition = countries.IT;
+  const {state: aresState} = useContext(aReSContext);  
+  const countryDefinition = countries.IT;
     const { streetAddressFormat } = countryDefinition;
-    const [options, setOptions] = useState([]);
+    const [options, setOptions] = useState({});
      
-    const geoApi = {};
+    const geoApi =  aresState.ares ;
     const refAdministrativeRegion = useRef([]);
     const refAdministrativeArea = useRef([]);
     const refCity = useRef([]);
@@ -23,7 +25,41 @@ import { useState } from "react"; // Aggiunto import mancante
     const refStreetNumber = useRef([]);
     const refInternalDetails = useRef([]);
 
-    // Espone i valori dei sotto-ref attraverso il ref principale
+    useEffect(() => {
+      let newOptions = {};
+      aresState.aReS.datasourceMap.ares_geo.getAdministrativeRegionsByNation.execute({body:{nation: countryDefinition.code}}).then((response) => {
+        newOptions.administrative_regions = response.results.data;
+      });
+      refAdministrativeArea.current.clear();
+      refCity.current.clear();
+      refPostalCode.current.clear();
+      setOptions(newOptions);
+    }, [countryDefinition.code]);
+
+    const loadAreas = useCallback((region) => {
+      let newOptions = {...options};
+      aresState.aReS.datasourceMap.ares_geo.getAdministrativeAreasByAdministrativeRegion.execute({body:{administrative_region: region.id}}).then((response) => {
+        newOptions.administrative_areas = response.results.data;
+      });
+      refCity.current.clear();
+      refPostalCode.current.clear();
+      setOptions(newOptions);
+    },[options]);
+
+    const loadCities = useCallback((area) => {
+      let newOptions = {...options};
+      aresState.aReS.datasourceMap.ares_geo.getCitiesByAdministrativeArea.execute({body:{administrative_area: area.id}}).then((response) => {
+        newOptions.cities = response.results.data;
+      }); 
+      refPostalCode.current.clear();
+      setOptions(newOptions);
+    },[options,refPostalCode]);
+    
+    const loadPostalCodes = useCallback((city) => {
+      let newOptions = {...options, postalCodes: city.postal_codes.split(',').sort((a,b)=>parseInt(a)-parseInt(b)) }; 
+      setOptions(newOptions); 
+    },[options]);
+    
     useEffect(() => {
       if (ref) {
         ref.current = {
@@ -34,7 +70,6 @@ import { useState } from "react"; // Aggiunto import mancante
           street: refStreet.current,
           streetNumber: refStreetNumber.current,
           internalDetails: refInternalDetails.current,
-          // Funzione per ottenere l'indirizzo completo formattato
           getFullAddress: () => {
             const address = {
               region: refAdministrativeRegion.current?.value,
@@ -81,9 +116,9 @@ import { useState } from "react"; // Aggiunto import mancante
   return (
 
     <View style={style.wrapper}>
-        <Field { ...streetAddressFormat[6]} addOption={false} getValue={(o)=>o.id} getText={(o)=>o.it_name} options={options.administrative_regions} name="administrative_region" component={TextInput} placeholder="Regione" style={style.administrative_region}/>
-        <Field { ...streetAddressFormat[5]} addOption={false} getValue={(o)=>o.id} getText={(o)=>o.it_name} options={options.administrative_areas[refAdministrativeRegion.current.value]} name="administrative_area" component={TextInput} placeholder="Provincia" style={style.administrative_area}/>
-        <Field { ...streetAddressFormat[4]} addOption={false} getValue={(o)=>o.id} getText={(o)=>o.it_name} options={options.cities[refAdministrativeArea.current.value]} name="city" component={TextInput} placeholder="Comune" style={style.city}/>
+        <Field { ...streetAddressFormat[6]} addOption={false} getValue={(o)=>o.id} getText={(o)=>o.it_name} options={options.administrative_regions} name="administrative_region" component={TextInput} placeholder="Regione" style={style.administrative_region} onChangeOption={loadAreas}/>
+        <Field { ...streetAddressFormat[5]} addOption={false} getValue={(o)=>o.id} getText={(o)=>o.it_name} options={options.administrative_areas[refAdministrativeRegion.current.value]} name="administrative_area" component={TextInput} placeholder="Provincia" style={style.administrative_area} onChangeOption={loadCities}/>
+        <Field { ...streetAddressFormat[4]} addOption={false} getValue={(o)=>o.id} getText={(o)=>o.it_name} options={options.cities[refAdministrativeArea.current.value]} name="city" component={TextInput} placeholder="Comune" style={style.city} onChangeOption={loadPostalCodes}/>
         <Field { ...streetAddressFormat[3]} addOption={false} getValue={(o)=>o.id} getText={(o)=>o.it_name} options={options.postal_codes[refCity.current.value]} name="postal_code" component={TextInput} placeholder="CAP" style={style.cap}/>
         <Field { ...streetAddressFormat[0]} addOption={true}   name="street" component={TextInput} placeholder="Via, piazza, etc..." style={style.street}/>
         <Field { ...streetAddressFormat[1]} addOption={true}   name="street_number" component={TextInput} placeholder="Numero civico" style={style.streetNumber}/>

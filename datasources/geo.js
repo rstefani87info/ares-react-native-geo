@@ -1,6 +1,6 @@
 import { RESTConnection } from '@ares/core/datasources.js';
 
-export const name = "aresgeo";
+export const name = "ares_geo";
 export const environments = {
   test: {
     geoApiConnection: {
@@ -62,6 +62,42 @@ export const queries = {
       continent: req.parameters.continent
     })
   },
+  updateNation: {
+    name: 'updateNation',
+    connectionSetting: 'geoApiConnection',
+    method: 'PUT',
+    query: '/ares/nations/:id',
+    parametersValidationRoles: (req, aReS) => ({
+      id: { type: 'number', required: true, source: (req) => req.parameters.id },
+      en_name: { type: 'text', required: true, source: (req) => req.parameters.en_name },
+      it_name: { type: 'text', required: true, source: (req) => req.parameters.it_name },
+      iso_code: { type: 'text', required: false, source: (req) => req.parameters.iso_code },
+      type: { type: 'text', required: false, source: (req) => req.parameters.type },
+      surface_kmq: { type: 'number', required: false, source: (req) => req.parameters.surface_kmq },
+      language: { type: 'text', required: false, source: (req) => req.parameters.language }
+    }),
+    mapParameters: (req) => ({
+      id: req.parameters.id,
+      en_name: req.parameters.en_name,
+      it_name: req.parameters.it_name,
+      iso_code: req.parameters.iso_code,
+      type: req.parameters.type,
+      surface_kmq: req.parameters.surface_kmq,
+      language: req.parameters.language
+    })
+  },
+  deleteNation: {
+    name: 'deleteNation',
+    connectionSetting: 'geoApiConnection',
+    method: 'DELETE',
+    query: '/ares/nations/:id',
+    parametersValidationRoles: (req, aReS) => ({
+      id: { type: 'number', required: true, source: (req) => req.parameters.id }
+    }),
+    mapParameters: (req) => ({
+      id: req.parameters.id
+    })
+  },
   
   // Administrative Regions
   getAdministrativeRegionsByNation: {
@@ -114,6 +150,40 @@ export const queries = {
       it_name: req.parameters.it_name,
       nation_id: req.parameters.nation_id,
       type: req.parameters.type
+    })
+  },
+  updateAdministrativeRegion: {
+    name: 'updateAdministrativeRegion',
+    connectionSetting: 'geoApiConnection',
+    method: 'PUT',
+    query: '/ares/administrative-regions/:id',
+    parametersValidationRoles: (req, aReS) => ({
+      id: { type: 'number', required: true, source: (req) => req.parameters.id },
+      en_name: { type: 'text', required: true, source: (req) => req.parameters.en_name },
+      it_name: { type: 'text', required: true, source: (req) => req.parameters.it_name },
+      nation_id: { type: 'number', required: true, source: (req) => req.parameters.nation_id },
+      type: { type: 'text', required: true, source: (req) => req.parameters.type },
+      surface_kmq: { type: 'number', required: false, source: (req) => req.parameters.surface_kmq }
+    }),
+    mapParameters: (req) => ({
+      id: req.parameters.id,
+      en_name: req.parameters.en_name,
+      it_name: req.parameters.it_name,
+      nation_id: req.parameters.nation_id,
+      type: req.parameters.type,
+      surface_kmq: req.parameters.surface_kmq
+    })
+  },
+  deleteAdministrativeRegion: {
+    name: 'deleteAdministrativeRegion',
+    connectionSetting: 'geoApiConnection',
+    method: 'DELETE',
+    query: '/ares/administrative-regions/:id',
+    parametersValidationRoles: (req, aReS) => ({
+      id: { type: 'number', required: true, source: (req) => req.parameters.id }
+    }),
+    mapParameters: (req) => ({
+      id: req.parameters.id
     })
   },
   
@@ -172,6 +242,42 @@ export const queries = {
       symbol: req.parameters.symbol,
       administrative_region_id: req.parameters.administrative_region_id,
       type: req.parameters.type
+    })
+  },
+  updateAdministrativeArea: {
+    name: 'updateAdministrativeArea',
+    connectionSetting: 'geoApiConnection',
+    method: 'PUT',
+    query: '/ares/administrative-areas/:id',
+    parametersValidationRoles: (req, aReS) => ({
+      id: { type: 'number', required: true, source: (req) => req.parameters.id },
+      en_name: { type: 'text', required: true, source: (req) => req.parameters.en_name },
+      it_name: { type: 'text', required: true, source: (req) => req.parameters.it_name },
+      surface_kmq: { type: 'number', required: false, source: (req) => req.parameters.surface_kmq },
+      symbol: { type: 'text', required: false, source: (req) => req.parameters.symbol },
+      administrative_region_id: { type: 'number', required: true, source: (req) => req.parameters.administrative_region_id },
+      type: { type: 'text', required: true, source: (req) => req.parameters.type }
+    }),
+    mapParameters: (req) => ({
+      id: req.parameters.id,
+      en_name: req.parameters.en_name,
+      it_name: req.parameters.it_name,
+      surface_kmq: req.parameters.surface_kmq,
+      symbol: req.parameters.symbol,
+      administrative_region_id: req.parameters.administrative_region_id,
+      type: req.parameters.type
+    })
+  },
+  deleteAdministrativeArea: {
+    name: 'deleteAdministrativeArea',
+    connectionSetting: 'geoApiConnection',
+    method: 'DELETE',
+    query: '/ares/administrative-areas/:id',
+    parametersValidationRoles: (req, aReS) => ({
+      id: { type: 'number', required: true, source: (req) => req.parameters.id }
+    }),
+    mapParameters: (req) => ({
+      id: req.parameters.id
     })
   },
   
